@@ -140,11 +140,47 @@ Configure via `.env` file in the `backend/` directory:
 
 ## 5. Development & Running
 
-### Prerequisites
+### Option A: Running via Docker (Recommended)
+The backend is packaged as an optimized multi-stage Node 20 Alpine container with automated Prisma schema synchronization:
+
+```bash
+# 1. Build and launch backend (alongside dependencies) from root directory:
+docker compose up -d --build backend
+
+# 2. View live backend logs:
+docker compose logs -f backend
+
+# 3. Execute Prisma migrations inside the running container:
+docker compose exec backend npx prisma db push
+
+# 4. Open an interactive shell inside the container:
+docker compose exec backend sh
+```
+
+#### Standalone Container Build:
+```bash
+# Build the Docker image manually:
+docker build -t fuel-intelligence-backend .
+
+# Run standalone container (with host networking or linked DB):
+docker run -d \
+  -p 4000:4000 \
+  -e DATABASE_URL="postgresql://postgres:postgres@host.docker.internal:5432/fuel?schema=public" \
+  -e SIMULATOR_BASE_URL="http://host.docker.internal:8000" \
+  -e ML_SERVICE_URL="http://host.docker.internal:5000" \
+  --name fuel-backend \
+  fuel-intelligence-backend
+```
+
+---
+
+### Option B: Local Manual Setup
+
+#### Prerequisites
 - Node.js 18+ (tested on Node.js 20 & 24)
 - PostgreSQL 14+ running locally or in Docker
 
-### Step-by-Step Execution
+#### Step-by-Step Execution
 ```bash
 # 1. Install dependencies
 npm install
