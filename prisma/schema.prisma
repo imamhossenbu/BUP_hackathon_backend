@@ -1,0 +1,63 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Recommendation {
+  id           String     @id @default(uuid())
+  inputs       Json
+  chosen       Json
+  alternatives Json
+  risk_before  Float
+  risk_after   Float
+  confidence   Float
+  policy       String
+  explanation  String?
+  created_at   DateTime   @default(now())
+  decisions    Decision[]
+
+  @@map("recommendations")
+}
+
+model Decision {
+  id                String          @id @default(uuid())
+  recommendation_id String
+  recommendation    Recommendation  @relation(fields: [recommendation_id], references: [id], onDelete: Cascade)
+  action            String          // APPROVED | REJECTED
+  operator          String
+  allocation_id     Int?
+  idempotency_key   String
+  sim_response      Json?
+  decided_at        DateTime        @default(now())
+
+  @@index([idempotency_key])
+  @@map("decisions")
+}
+
+model Alert {
+  id                String    @id @default(uuid())
+  station_id        String
+  fuel_type         String
+  severity          String    // INFO | WARNING | CRITICAL
+  hours_to_stockout Float
+  message           String
+  raised_at         DateTime  @default(now())
+  resolved_at       DateTime?
+
+  @@index([station_id, fuel_type])
+  @@map("alerts")
+}
+
+model SystemEvent {
+  id     String   @id @default(uuid())
+  kind   String   // FAULT_DETECTED | FALLBACK_ACTIVATED | RECOVERED | VALIDATION_REJECTED | CIRCUIT_OPEN
+  detail Json
+  at     DateTime @default(now())
+
+  @@index([kind, at])
+  @@map("system_events")
+}
